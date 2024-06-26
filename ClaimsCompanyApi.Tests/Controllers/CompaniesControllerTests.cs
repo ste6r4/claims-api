@@ -29,12 +29,14 @@ namespace ClaimsCompanyApi.Tests.Controllers
             _senderMock.Setup(m => m.Send(query, It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
             
             var result = await _controller.GetCompanyById(query.Id);
-            
-            result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
-            okResult?.Value.Should().Be(expectedResult);
-        }
+            var companyResult = GetCompanyFromResultValue(result);
 
+            result.Should().BeOfType<OkObjectResult>();
+            result.Should().BeOfType<OkObjectResult>().Which.StatusCode.Should().Be(200);
+            companyResult?.Should().BeEquivalentTo(expectedResult);
+            companyResult?.HasActivePolicy.Should().Be(expectedResult.HasActivePolicy);
+        }
+        
         [Fact]
         public async Task GetCompanyById_WithInvalidId_ReturnsNotFoundResult()
         {
@@ -45,21 +47,33 @@ namespace ClaimsCompanyApi.Tests.Controllers
             var result = await _controller.GetCompanyById(companyId);
             
             result.Should().BeOfType<NotFoundResult>();
+            result.Should().BeOfType<NotFoundResult>().Which.StatusCode.Should().Be(404);
         }
 
         [Fact]
         public async Task GetClaimsByCompany_WithValidCompanyId_ReturnsOkResult()
         {
-            var companyId = FakeData.CompanyOne!.Id;
+            var companyId = FakeData.CompanyTwo!.Id;
             var query = new GetClaimsByCompanyQuery(companyId);
             var expectedResult = new List<Claim> { FakeData.ClaimOne! };
             _senderMock.Setup(m => m.Send(query, It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
             
             var result = await _controller.GetClaimsByCompany(companyId);
-            
+            var companyResult = GetCompanyFromResultValue(result);
+
             result.Should().BeOfType<OkObjectResult>();
+            result.Should().BeOfType<OkObjectResult>().Which.StatusCode.Should().Be(200);
+            companyResult?.Claims.Should().BeEquivalentTo(expectedResult);
+            companyResult?.Claims.Should().HaveCount(1);
+            companyResult?.Claims.Any(x => x.UCR == FakeData.ClaimOne?.UCR).Should().BeFalse();
+            companyResult?.Claims.Any(x=>x.UCR == FakeData.ClaimTwo?.UCR).Should().BeTrue();
+        }
+
+        private static Company? GetCompanyFromResultValue(IActionResult result)
+        {
             var okResult = result as OkObjectResult;
-            okResult?.Value.Should().Be(expectedResult);
+            var companyResult = okResult?.Value as Company;
+            return companyResult;
         }
     }
 }

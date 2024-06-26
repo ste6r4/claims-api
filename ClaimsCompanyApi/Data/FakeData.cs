@@ -13,6 +13,8 @@ namespace ClaimsCompanyApi.Data
             AddClaimTypes();
             AddCompanies();
             AddClaims();
+            CompanyOne!.Claims = [ClaimOne!];
+            CompanyTwo!.Claims = [ClaimTwo!];
         }
 
         public static List<ClaimType> AddClaimTypes()

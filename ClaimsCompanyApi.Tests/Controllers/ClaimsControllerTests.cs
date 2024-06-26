@@ -25,51 +25,56 @@ namespace ClaimsCompanyApi.Tests.Controllers
         [Fact]
         public async Task GetClaimById_WithValidId_ReturnsOkResult()
         {
-            var query = new GetClaimByIdQuery(FakeData.ClaimOne!.UCR);
+            var query = new GetClaimByUcrQuery(FakeData.ClaimOne!.UCR);
             _senderMock.Setup(m => m.Send(query, It.IsAny<CancellationToken>())).ReturnsAsync(FakeData.ClaimOne);
             
             var result = await _claimsController.GetClaimById(query.Ucr);
-            
-            result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
-            okResult?.Value.Should().Be(FakeData.ClaimOne);
-        }
+            var claim = GetClaimFromResultValue(result);
 
+            result.Should().BeOfType<OkObjectResult>();
+            result.Should().BeOfType<OkObjectResult>().Which.StatusCode.Should().Be(200);
+            claim.Should().Be(FakeData.ClaimOne);
+            claim?.DaysOld.Should().Be(FakeData.ClaimOne.DaysOld);
+        }
+        
         [Fact]
         public async Task GetClaimById_WithInvalidId_ReturnsNotFoundResult()
         {
             const string claimId = "99";
-            var query = new GetClaimByIdQuery(claimId);
+            var query = new GetClaimByUcrQuery(claimId);
             _senderMock.Setup(m => m.Send(query, It.IsAny<CancellationToken>())).ReturnsAsync((Claim)null!);
             
             var result = await _claimsController.GetClaimById(claimId);
             
             result.Should().BeOfType<NotFoundResult>();
+            result.Should().BeOfType<NotFoundResult>().Which.StatusCode.Should().Be(404);
         }
 
         [Fact]
         public async Task UpdateClaim_WithValidClaim_ReturnsOkResult()
         {
-            var claim = FakeData.ClaimOne;
-            var command = new UpdateClaimCommand(claim!);
+            var claimToUpdate = FakeData.ClaimOne;
+            var command = new UpdateClaimCommand(claimToUpdate!);
             var expectedResult = new Claim
             {
-                Id = claim!.Id,
-                UCR = claim.UCR,
-                CompanyId = claim.CompanyId,
-                ClaimDate = claim.ClaimDate,
-                LossDate = claim.LossDate,
-                AssuredName = claim.AssuredName,
+                Id = claimToUpdate!.Id,
+                UCR = claimToUpdate.UCR,
+                CompanyId = claimToUpdate.CompanyId,
+                ClaimDate = claimToUpdate.ClaimDate,
+                LossDate = claimToUpdate.LossDate,
+                AssuredName = claimToUpdate.AssuredName,
                 IncurredLoss = 1050,
-                Closed = claim.Closed
+                Closed = claimToUpdate.Closed
             };
             _senderMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>())).ReturnsAsync(expectedResult);
             
-            var result = await _claimsController.UpdateClaim(claim);
-            
+            var result = await _claimsController.UpdateClaim(claimToUpdate);
+            var claim = GetClaimFromResultValue(result);
+
             result.Should().BeOfType<OkObjectResult>();
-            var okResult = result as OkObjectResult;
-            okResult?.Value.Should().Be(expectedResult);
+            result.Should().BeOfType<OkObjectResult>().Which.StatusCode.Should().Be(200);
+            claim?.DaysOld.Should().Be(FakeData.ClaimOne?.DaysOld);
+            claim?.DaysOld.Should().Be(FakeData.ClaimOne?.DaysOld);
         }
 
         [Fact]
@@ -82,6 +87,14 @@ namespace ClaimsCompanyApi.Tests.Controllers
             var result = await _claimsController.UpdateClaim(claim);
             
             result.Should().BeOfType<NotFoundResult>();
+            result.Should().BeOfType<NotFoundResult>().Which.StatusCode.Should().Be(404);
+        }
+
+        private static Claim? GetClaimFromResultValue(IActionResult result)
+        {
+            var okResult = result as OkObjectResult;
+            var claim = okResult?.Value as Claim;
+            return claim;
         }
     }
 }

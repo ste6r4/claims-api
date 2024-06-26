@@ -19,7 +19,7 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
     public async Task<Company?> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
     {
         var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
-        return company;
+        return Company.CompanyWithoutClaimsAttached(company);
     }
 
     public void Dispose()

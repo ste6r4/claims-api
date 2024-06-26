@@ -17,10 +17,10 @@ namespace ClaimsCompanyApi.Controllers
             _mediator = mediator;
         }
          
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetClaimById(string id)
+        [HttpGet("{ucr}")]
+        public async Task<IActionResult> GetClaimById(string ucr)
         {
-            var result = await _mediator.Send(new GetClaimByIdQuery(id));
+            var result = await _mediator.Send(new GetClaimByUcrQuery(ucr));
             return result is not null ? Ok(result) : NotFound();
         }
 

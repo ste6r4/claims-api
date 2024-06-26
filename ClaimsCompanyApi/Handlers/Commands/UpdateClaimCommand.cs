@@ -9,17 +9,17 @@ namespace ClaimsCompanyApi.Handlers.Commands
 
     public class UpdateClaimCommandHandler : IRequestHandler<UpdateClaimCommand, Claim?>, IDisposable, IAsyncDisposable
     {
-        private readonly AppDbContext _context;
-
-        public UpdateClaimCommandHandler(AppDbContext context)
+        private readonly AppDbContext? _context;
+        
+        public UpdateClaimCommandHandler(AppDbContext? context)
         {
-            _context = FakeContextHelper.CreateInMemoryDbContext();
+            _context =  FakeContextHelper.CreateInMemoryDbContext();
         }
 
         public async Task<Claim?> Handle(UpdateClaimCommand request, CancellationToken cancellationToken)
         {
-            var existingClaim = await _context.Claims
-                .FirstOrDefaultAsync(c => c.UCR == request.UpdatedClaim.UCR, cancellationToken);
+            var existingClaim = await _context?.Claims
+                .FirstOrDefaultAsync(c => c.UCR.ToLower() == request.UpdatedClaim.UCR.ToLower(), cancellationToken)!;
             if (existingClaim is null) return null;
             existingClaim.ClaimDate = request.UpdatedClaim.ClaimDate;
             existingClaim.LossDate = request.UpdatedClaim.LossDate;
@@ -28,17 +28,17 @@ namespace ClaimsCompanyApi.Handlers.Commands
             existingClaim.Closed = request.UpdatedClaim.Closed;
             _context.Claims.Update(existingClaim);
             await _context.SaveChangesAsync(cancellationToken);
-            return existingClaim;
+            return Claim.ClaimWithCompanyAttached(existingClaim);
         }
 
         public void Dispose()
         {
-            _context.Dispose();
+            _context?.Dispose();
         }
 
         public async ValueTask DisposeAsync()
         {
-            await _context.DisposeAsync();
+            await _context!.DisposeAsync();
         }
     }
 }

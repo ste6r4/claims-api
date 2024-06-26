@@ -1,17 +1,9 @@
 using ClaimsCompanyApi.Common;
 using ClaimsCompanyApi.Data;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
-
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(Constants.InMemoryConnectionString));
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
-
-
+RegisterServices(builder);
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -31,3 +23,13 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+void RegisterServices(WebApplicationBuilder webApplicationBuilder)
+{
+    webApplicationBuilder.Services.AddControllers();
+    webApplicationBuilder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(Constants.InMemoryConnectionString),
+        ServiceLifetime.Transient);
+    webApplicationBuilder.Services.AddEndpointsApiExplorer();
+    webApplicationBuilder.Services.AddSwaggerGen();
+    webApplicationBuilder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
+}

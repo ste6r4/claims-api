@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClaimsCompanyApi.Handlers.Queries;
 
-public record GetClaimByIdQuery(string Ucr) : IRequest<Claim?>;
+public record GetClaimByUcrQuery(string Ucr) : IRequest<Claim?>;
 
-public class GetClaimByIdQueryHandler : IRequestHandler<GetClaimByIdQuery, Claim?>, IDisposable, IAsyncDisposable
+public class GetClaimByIdQueryHandler : IRequestHandler<GetClaimByUcrQuery, Claim?>, IDisposable, IAsyncDisposable
 {
     private readonly AppDbContext _context ;
 
@@ -16,10 +16,11 @@ public class GetClaimByIdQueryHandler : IRequestHandler<GetClaimByIdQuery, Claim
         _context = FakeContextHelper.CreateInMemoryDbContext();
     }
 
-    public async Task<Claim?> Handle(GetClaimByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Claim?> Handle(GetClaimByUcrQuery request, CancellationToken cancellationToken)
     {
         var claim = await _context.Claims
-            .Where(c => c.UCR == request.Ucr)
+            .Where(c => c.UCR.ToLower() == request.Ucr.ToLower())
+            .Select(x => Claim.ClaimWithCompanyAttached(x))
             .FirstOrDefaultAsync(cancellationToken);
         return claim;
     }

@@ -23,5 +23,6 @@ public class CompanyHandlersTests : TestBase
         result?.Country.Should().Be(FakeData.CompanyOne.Country); 
         result?.Active.Should().Be(FakeData.CompanyOne.Active);
         result?.InsuranceEndDate.Should().Be(FakeData.CompanyOne.InsuranceEndDate);
+        result?.Claims.Should().BeEmpty();
     }
 }

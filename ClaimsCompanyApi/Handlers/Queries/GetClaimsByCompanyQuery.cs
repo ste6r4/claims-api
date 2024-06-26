@@ -20,6 +20,7 @@ public class GetClaimsByCompanyQueryHandler : IRequestHandler<GetClaimsByCompany
     {
         var claims = await _context.Claims
             .Where(c => c.CompanyId == request.CompanyId)
+            .Select(x => Claim.ClaimWithCompanyAttached(x))
             .ToListAsync(cancellationToken);
 
         return claims;
